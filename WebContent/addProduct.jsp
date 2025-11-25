@@ -73,6 +73,7 @@
 							<option value="laptop">LAPTOP</option>
 							<option value="tablet">TABLET</option>
 							<option value="speaker">SPEAKER</option>
+							<option value="console">CONSOLE</option>
 							<option value="other">Some Other Appliances</option>
 						</select>
 					</div>
@@ -93,6 +94,14 @@
 							class="form-control" id="last_name" required>
 					</div>
 				</div>
+				<div class="row">
+    				<div class="col-md-6 form-group">
+        				<label for="discount">Discount (%)</label><input type="number" step="0.01" min="0" max="100"
+              				 placeholder="Enter Discount Percentage" name="discount" 
+              				 class="form-control" id="discount">
+    				</div>
+				</div>
+				
 				<div>
 					<div class="col-md-12 form-group">
 						<label for="last_name">Product Image</label> <input type="file"
