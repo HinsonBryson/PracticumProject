@@ -237,4 +237,7 @@ USE `shopping-cart`;
 INSERT INTO `shopping-cart`.`usercart` (`username`, `prodid`, `quantity`) VALUES ('guest@gmail.com', 'P20230423082243', 2);
 
 COMMIT;
+ALTER TABLE product 
+ADD COLUMN pdiscount DOUBLE DEFAULT 0,
+COMMIT;
 
