@@ -148,7 +148,7 @@
 						</form></td>
 					<td colspan="2" align="center"><form method="post">
 							<button style="background-color: blue; color: white;"
-								formaction="payment.jsp?amount=<%=totAmount%>">Pay Now</button>
+								formaction="Checkout.jsp?amount=<%=totAmount%>">Pay Now</button>
 						</form></td>
 
 				</tr>

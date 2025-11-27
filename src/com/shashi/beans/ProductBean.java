@@ -16,6 +16,7 @@ public class ProductBean implements Serializable {
     private InputStream prodImage;
 
     public ProductBean() {}
+    
 
     public ProductBean(String prodId, String prodName, String prodType, String prodInfo,
                        double prodPrice, int prodQuantity, double pdiscount, InputStream prodImage) {

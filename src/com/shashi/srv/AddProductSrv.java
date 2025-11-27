@@ -15,59 +15,57 @@ import javax.servlet.http.Part;
 
 import com.shashi.service.impl.ProductServiceImpl;
 
-/**
- * Servlet implementation class AddProductSrv
- */
+
+
 @WebServlet("/AddProductSrv")
 @MultipartConfig(maxFileSize = 16177215)
 public class AddProductSrv extends HttpServlet {
-	private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 1L;
 
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-		HttpSession session = request.getSession();
-		String userType = (String) session.getAttribute("usertype");
-		String userName = (String) session.getAttribute("username");
-		String password = (String) session.getAttribute("password");
+        HttpSession session = request.getSession();
+        String userType = (String) session.getAttribute("usertype");
+        String userName = (String) session.getAttribute("username");
+        String password = (String) session.getAttribute("password");
 
-		if (userType == null || !userType.equals("admin")) {
+        if (userType == null || !userType.equals("admin")) {
+            response.sendRedirect("login.jsp?message=Access Denied!");
+        } else if (userName == null || password == null) {
+            response.sendRedirect("login.jsp?message=Session Expired, Login Again to Continue!");
+        }
 
-			response.sendRedirect("login.jsp?message=Access Denied!");
+        String status = "Product Registration Failed!";
+        String prodName = request.getParameter("name");
+        String prodType = request.getParameter("type");
+        String prodInfo = request.getParameter("info");
+        double prodPrice = Double.parseDouble(request.getParameter("price"));
+        int prodQuantity = Integer.parseInt(request.getParameter("quantity"));
 
-		}
+        // ⭐ NEW — Read discount field
+        double prodDiscount = Double.parseDouble(request.getParameter("discount"));
 
-		else if (userName == null || password == null) {
+        Part part = request.getPart("image");
+        InputStream prodImage = part.getInputStream();
 
-			response.sendRedirect("login.jsp?message=Session Expired, Login Again to Continue!");
-		}
+        ProductServiceImpl product = new ProductServiceImpl();
 
-		String status = "Product Registration Failed!";
-		String prodName = request.getParameter("name");
-		String prodType = request.getParameter("type");
-		String prodInfo = request.getParameter("info");
-		double prodPrice = Double.parseDouble(request.getParameter("price"));
-		int prodQuantity = Integer.parseInt(request.getParameter("quantity"));
+        // ⭐ FIXED — Pass prodDiscount instead of prodPrice
+        status = product.addProduct(
+                prodName, prodType, prodInfo,
+                prodPrice, prodQuantity,
+                prodDiscount,   // <-- Correct!
+                prodImage
+        );
 
-		Part part = request.getPart("image");
+        RequestDispatcher rd = request.getRequestDispatcher("addProduct.jsp?message=" + status);
+        rd.forward(request, response);
+    }
 
-		InputStream inputStream = part.getInputStream();
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-		InputStream prodImage = inputStream;
-
-		ProductServiceImpl product = new ProductServiceImpl();
-
-		status = product.addProduct(prodName, prodType, prodInfo, prodPrice, prodQuantity, prodImage);
-
-		RequestDispatcher rd = request.getRequestDispatcher("addProduct.jsp?message=" + status);
-		rd.forward(request, response);
-
-	}
-
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-
-		doGet(request, response);
-	}
-
+        doGet(request, response);
+    }
 }
