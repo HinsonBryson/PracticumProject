@@ -11,15 +11,16 @@ import com.shashi.beans.ProductBean;
 import com.shashi.service.DiscountStrategy;
 import com.shashi.service.DiscountFactory;
 import com.shashi.service.impl.ProductServiceImpl;
-import com.shashi.service.impl.DiscountFactoryImpl;  // <-- IMPORTANT
+import com.shashi.service.impl.DiscountFactoryImpl;
+import com.shashi.service.impl.CouponDiscountStrategyImpl; // coupon strategy
 import com.shashi.utility.DBUtil;
 
 @WebServlet("/CheckoutSrv")
 public class CheckoutSrv extends HttpServlet {
-	private static final long serialVersionUID = 1L;
 
+    private static final long serialVersionUID = 1L;
 
-	@Override
+    @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
@@ -31,13 +32,15 @@ public class CheckoutSrv extends HttpServlet {
             return;
         }
 
+        String couponCode = request.getParameter("coupon"); // <-- NEW
+
         List<CartItem> cart = new ArrayList<>();
         double originalTotal = 0;
         double totalDiscount = 0;
+        double couponDiscount = 0;
         double finalTotal = 0;
 
-        // USE IMPLEMENTATION, NOT INTERFACE
-        DiscountFactory discountFactory = new DiscountFactoryImpl();
+        DiscountFactory factory = new DiscountFactoryImpl();
 
         try (Connection con = DBUtil.provideConnection()) {
 
@@ -49,6 +52,7 @@ public class CheckoutSrv extends HttpServlet {
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
+
                 ProductBean product = new ProductBean();
                 product.setProdId(rs.getString("prodid"));
                 product.setProdName(rs.getString("pname"));
@@ -57,12 +61,20 @@ public class CheckoutSrv extends HttpServlet {
 
                 int qty = rs.getInt("quantity");
 
-                // Compute prices
                 double original = product.getProdPrice() * qty;
 
-                DiscountStrategy strategy = discountFactory.getStrategy(product);
-                double discount = strategy.apply(product, qty);
-                double finalAmt = original - discount;
+                // product-level discount
+                DiscountStrategy strat = factory.getStrategy(product);
+                double itemDiscount = strat.apply(product, qty);
+
+                // coupon discount (applied AFTER product discount)
+                double itemCoupon = 0;
+                if (couponCode != null && !couponCode.trim().isEmpty()) {
+                    CouponDiscountStrategyImpl couponStrat = new CouponDiscountStrategyImpl(couponCode);
+                    itemCoupon = couponStrat.apply(product, qty);
+                }
+
+                double finalAmt = original - itemDiscount - itemCoupon;
 
                 cart.add(new CartItem(
                     product.getProdId(),
@@ -71,12 +83,14 @@ public class CheckoutSrv extends HttpServlet {
                     qty,
                     product.getPdiscount(),
                     original,
-                    discount,
+                    itemDiscount,
+                    itemCoupon,
                     finalAmt
                 ));
 
                 originalTotal += original;
-                totalDiscount += discount;
+                totalDiscount += itemDiscount;
+                couponDiscount += itemCoupon;
                 finalTotal += finalAmt;
             }
 
@@ -84,16 +98,17 @@ public class CheckoutSrv extends HttpServlet {
             e.printStackTrace();
         }
 
+        // send totals
         request.setAttribute("cart", cart);
         request.setAttribute("originalTotal", originalTotal);
-        request.setAttribute("totalDiscount", totalDiscount);
+        request.setAttribute("productDiscountTotal", totalDiscount);
+        request.setAttribute("couponDiscountTotal", couponDiscount);
         request.setAttribute("finalTotal", finalTotal);
+        request.setAttribute("couponCode", couponCode);
 
         request.getRequestDispatcher("checkout.jsp").forward(request, response);
     }
 
-
-    // POST — Process checkout
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
@@ -115,14 +130,10 @@ public class CheckoutSrv extends HttpServlet {
             PreparedStatement ps = con.prepareStatement(
                 "SELECT prodid, quantity FROM usercart WHERE username=? FOR UPDATE");
             ps.setString(1, username);
-
             ResultSet rs = ps.executeQuery();
 
             while (rs.next()) {
-                String prodId = rs.getString("prodid");
-                int qty = rs.getInt("quantity");
-
-                if (!productService.sellNProduct(prodId, qty)) {
+                if (!productService.sellNProduct(rs.getString("prodid"), rs.getInt("quantity"))) {
                     success = false;
                     break;
                 }
@@ -150,24 +161,26 @@ public class CheckoutSrv extends HttpServlet {
     }
 
 
-    // ---------------------------------------------------------
-    // Inner Class representing an item in the cart
-    // ---------------------------------------------------------
     public static class CartItem {
         public String prodId, name;
-        public double price, pdiscount, original, discount, finalAmt;
+        public double price, pdiscount, original, productDiscount, couponDiscount, finalAmt;
         public int qty;
 
         public CartItem(String prodId, String name, double price, int qty,
-                        double pdiscount, double original, double discount, double finalAmt) {
+                        double pdiscount, double original, double productDiscount,
+                        double couponDiscount, double finalAmt) {
+
             this.prodId = prodId;
             this.name = name;
             this.price = price;
             this.qty = qty;
             this.pdiscount = pdiscount;
             this.original = original;
-            this.discount = discount;
+            this.productDiscount = productDiscount;
+            this.couponDiscount = couponDiscount;
             this.finalAmt = finalAmt;
         }
     }
 }
+
+

@@ -9,12 +9,12 @@ public class DiscountFactoryImpl implements DiscountFactory {
     @Override
     public DiscountStrategy getStrategy(ProductBean product) {
 
-        // If product discount > 0, use product-level discount strategy
+        // If product-level discount exists
         if (product.getPdiscount() > 0) {
             return new ProductDiscountStrategyImpl();
         }
 
-        // If no discount, use no-discount strategy
+        // Otherwise fallback
         return new NoDiscountStrategyImpl();
     }
 }

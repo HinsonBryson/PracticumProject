@@ -24,34 +24,16 @@
                 <div class="panel-body">
 
                     <p class="lead text-center">
-                        Thank you for your purchase! Your order has been processed.
+                        Thank you for your purchase! Your order has been successfully processed.
                     </p>
 
                     <hr/>
 
-                    <%-- THESE ATTRIBUTES ARE SET ONLY IF forwarded (not redirected) --%>
-                    <%
-                        Object oTotal = request.getAttribute("originalTotal");
-                        Object oDisc  = request.getAttribute("totalDiscount");
-                        Object oFinal = request.getAttribute("finalTotal");
-                    %>
-
-                    <% if (oTotal != null && oDisc != null && oFinal != null) { %>
-
-                        <h3>Order Summary</h3>
-
-                        <p><strong>Original Total:</strong> $<%= oTotal %></p>
-                        <p><strong>Discount Applied:</strong> $<%= oDisc %></p>
-                        <p><strong>Final Amount Paid:</strong> $<%= oFinal %></p>
-
-                    <% } else { %>
-
-                        <p class="text-warning">
-                            Order totals were not forwarded.  
-                            (This happens when CheckoutSrv redirects instead of forward.)
-                        </p>
-
-                    <% } %>
+                    <!-- Since CheckoutSrv redirects, totals will NOT exist -->
+                    <p class="text-center">
+                        A confirmation email has been sent (if configured).  
+                        You can continue shopping or return to the home page.
+                    </p>
 
                     <hr/>
 
