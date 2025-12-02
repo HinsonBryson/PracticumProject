@@ -95,6 +95,8 @@
 							<option value="other"
 								<%="other".equalsIgnoreCase(ptype) ? "selected" : ""%>>Some
 								Other Appliances</option>
+							<option value="console"
+								<%="console".equalsIgnoreCase(ptype) ? "selected" : ""%>>CONSOLE</option>
 						</select>
 					</div>
 				</div>
@@ -117,6 +119,13 @@
 							id="last_name" name="quantity" required>
 					</div>
 				</div>
+				<div class="row">
+    				<div class="col-md-6 form-group">
+        				<label for="discount">Discount (%)</label><input type="number" step="0.01" min="0" max="100"
+              				 placeholder="Enter Discount Percentage" name="discount" 
+              				 class="form-control" id="discount">
+    				</div>
+				</div>				
 				<div class="row text-center">
 					<div class="col-md-4" style="margin-bottom: 2px;">
 						<button formaction="adminViewProduct.jsp" class="btn btn-danger">Cancel</button>
